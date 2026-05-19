@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS Learning Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- TOP NAVIGATION BAR -->
+  <nav class="topbar">
+    <div class="logo">CS Hub</div>
+    <div class="nav-buttons">
+      <button class="nav-btn active" data-section="cyber">Cyber Security</button>
+      <button class="nav-btn" data-section="robotics">Robotics/Hardware</button>
+      <button class="nav-btn" data-section="roblox">Roblox Studio</button>
+      <button class="nav-btn" data-section="multimedia">Multi-Media</button>
+      
+      <div class="upload-menu-container hidden" id="uploadMenuContainer">
+        <button class="nav-btn admin-toggle" id="uploadBtn">Upload Materials</button>
+        <div class="upload-submenu">
+          <button class="submenu-item" data-material="overview">Post</button>
+          <button class="submenu-item" data-material="coding">Code Base</button>
+          <button class="submenu-item" data-material="lessons">Lesson</button>
+          <button class="submenu-item" data-material="support">Support</button>
+        </div>
+      </div>
+
+      <span id="adminUsername" class="admin-username hidden"></span>
+      <button class="nav-btn admin-toggle hidden" id="logoutBtn">Logout</button>
+      <button class="nav-btn admin-toggle" id="adminBtn">Admin Login</button>
+    </div>
+  </nav>
+
+  <!-- LOGIN MODAL -->
+  <div id="loginModal" class="login-modal hidden">
+    <div class="login-container">
+      <h2>Admin Login</h2>
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label>Username:</label>
+          <input type="text" id="loginUsername" required placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label>Password:</label>
+          <input type="password" id="loginPassword" required placeholder="Enter password">
+        </div>
+        <button type="submit" class="submit-btn">Login</button>
+        <p id="loginError" class="error-message"></p>
+      </form>
+      <button class="close-btn" id="closeLogin">&times;</button>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" class="admin-panel hidden">
+    <div class="admin-container">
+      <h2>Admin Dashboard</h2>
+      <button class="close-btn" id="closeAdmin">&times;</button>
+      
+      <form id="postForm" class="admin-form">
+        <div class="form-group">
+          <label>Section:</label>
+          <select id="adminSection" required>
+            <option value="cyber">Cyber Security</option>
+            <option value="robotics">Robotics/Hardware</option>
+            <option value="roblox">Roblox Studio</option>
+            <option value="multimedia">Multi-Media</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Post Title:</label>
+          <input type="text" id="postTitle" required placeholder="Enter post title">
+        </div>
+
+        <div class="form-group">
+          <label>Short Introduction:</label>
+          <textarea id="postIntro" required placeholder="Enter short introduction" maxlength="200"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Background Image:</label>
+          <input type="file" id="postImage" accept="image/*" placeholder="Upload image from device">
+        </div>
+
+        <div class="form-group">
+          <label>Date Learned:</label>
+          <input type="date" id="postDate" required>
+        </div>
+
+        <button type="submit" class="submit-btn">Create Post</button>
+      </form>
+
+      <hr>
+      <h3>Recent Posts</h3>
+      <div id="adminPostsList" class="admin-posts-list"></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div id="postsFeed" class="posts-feed"></div>
+    <div id="buttonsFeed" class="buttons-feed hidden"></div>
+  </main>
+
+  <!-- DETAIL PAGE -->
+  <div id="detailPage" class="detail-page hidden">
+    <button class="back-btn" id="backBtn">← Back</button>
+    
+    <div class="detail-container">
+      <div class="detail-header">
+        <h1 id="detailTitle"></h1>
+        <p id="detailDate"></p>
+      </div>
+
+      <div class="detail-content">
+        <div class="detail-tabs">
+          <button class="tab-btn active" data-tab="overview">Overview</button>
+          <button class="tab-btn" data-tab="coding">Code Base</button>
+          <button class="tab-btn" data-tab="lessons">Lessons</button>
+          <button class="tab-btn" data-tab="support">Support</button>
+        </div>
+
+        <div id="overviewTab" class="tab-content active">
+          <img id="detailImage" src="" alt="Post image" class="detail-image">
+          <div id="detailIntro" class="detail-intro"></div>
+        </div>
+
+        <div id="codingTab" class="tab-content">
+          <h3>Code Base & Documentation</h3>
+          <div id="codingContent" class="content-box">
+            <p>Code and documentation will be displayed here in a formatted view.</p>
+          </div>
+        </div>
+
+        <div id="lessonsTab" class="tab-content">
+          <h3>Lessons</h3>
+          <div id="lessonsContent" class="content-box">
+            <p>Lesson materials and resources will be displayed here.</p>
+          </div>
+        </div>
+
+        <div id="supportTab" class="tab-content">
+          <h3>Support & Resources</h3>
+          <div id="supportContent" class="content-box">
+            <p>Additional support and external resources will be linked here.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIAL UPLOAD MODAL -->
+  <div id="materialUploadModal" class="material-upload-modal hidden">
+    <div class="material-upload-container">
+      <h2>Upload Learning Materials</h2>
+      <button class="close-btn" id="closeMaterialUpload">&times;</button>
+
+      <div class="material-tabs">
+        <button class="material-tab-btn active" data-material="overview">Overview</button>
+        <button class="material-tab-btn" data-material="coding">Code Base</button>
+        <button class="material-tab-btn" data-material="lessons">Lessons</button>
+        <button class="material-tab-btn" data-material="support">Support</button>
+      </div>
+
+      <form id="materialForm" class="material-form">
+        <div class="material-form-content">
+          <div id="overview-form" class="material-section active">
+            <h3>Overview</h3>
+            <div class="form-group">
+              <label>Upload Image:</label>
+              <input type="file" class="material-image" accept="image/*">
+            </div>
+            <div class="form-group">
+              <label>Description Text:</label>
+              <textarea class="material-text" placeholder="Enter overview description" style="min-height: 150px;"></textarea>
+            </div>
+          </div>
+
+          <div id="coding-form" class="material-section">
+            <h3>Code Base & Documentation</h3>
+            <div class="form-group">
+              <label>Upload Code File or PDF:</label>
+              <input type="file" class="material-file" accept=".pdf,.txt,.js,.html,.css,.py">
+            </div>
+            <div class="form-group">
+              <label>Code Documentation:</label>
+              <textarea class="material-text" placeholder="Enter code documentation and examples" style="min-height: 150px;"></textarea>
+            </div>
+          </div>
+
+          <div id="lessons-form" class="material-section">
+            <h3>Lessons</h3>
+            <div class="form-group">
+              <label>Upload Lesson File or PDF:</label>
+              <input type="file" class="material-file" accept=".pdf,.txt,.pptx,.docx">
+            </div>
+            <div class="form-group">
+              <label>Lesson Content:</label>
+              <textarea class="material-text" placeholder="Enter lesson content and key points" style="min-height: 150px;"></textarea>
+            </div>
+          </div>
+
+          <div id="support-form" class="material-section">
+            <h3>Support & Resources</h3>
+            <div class="form-group">
+              <label>Upload Resource File:</label>
+              <input type="file" class="material-file" accept=".pdf,.txt,.xlsx,.docx">
+            </div>
+            <div class="form-group">
+              <label>Resource Links & Description:</label>
+              <textarea class="material-text" placeholder="Enter resource links, references and support information" style="min-height: 150px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Save Materials</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
