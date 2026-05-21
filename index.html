@@ -22,6 +22,12 @@
         <input type="file" id="hiddenFileInput" style="display: none;" accept=".pdf,.txt,.js,.html,.css,.py,.pptx,.docx,.xlsx,.png,.jpg,.jpeg,.gif" multiple>
       </div>
 
+      <button class="nav-btn admin-only hidden" id="pendingUploadsBtn">
+        Pending Uploads <span id="pendingBadge" class="badge" style="display: none;"></span>
+      </button>
+
+      <button class="nav-btn hidden" id="uploadHistoryBtn">My Uploads</button>
+
       <span id="adminUsername" class="admin-username hidden"></span>
       <button class="nav-btn admin-toggle hidden" id="logoutBtn">Logout</button>
       
@@ -262,6 +268,30 @@
 
         <button type="submit" class="submit-btn">Save Materials</button>
       </form>
+    </div>
+  </div>
+
+  <!-- PENDING UPLOADS APPROVAL MODAL -->
+  <div id="pendingUploadsModal" class="login-modal hidden">
+    <div class="login-container" style="max-height: 80vh; overflow-y: auto; width: 600px;">
+      <h2>Pending Material Uploads</h2>
+      <button class="close-btn" id="closePendingUploads">&times;</button>
+
+      <div id="pendingUploadsList" class="pending-uploads-list">
+        <p style="text-align: center; color: #666;">No pending uploads</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER UPLOAD HISTORY MODAL -->
+  <div id="uploadHistoryModal" class="login-modal hidden">
+    <div class="login-container" style="max-height: 80vh; overflow-y: auto; width: 600px;">
+      <h2>My Upload History</h2>
+      <button class="close-btn" id="closeUploadHistory">&times;</button>
+
+      <div id="uploadHistoryList" class="upload-history-list">
+        <p style="text-align: center; color: #666;">No uploads yet</p>
+      </div>
     </div>
   </div>
 

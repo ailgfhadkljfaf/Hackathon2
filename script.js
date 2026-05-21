@@ -84,6 +84,43 @@ function savePostsToStorage() {
 
 loadPostsFromStorage();
 
+// New storage functions for approval system
+let pendingUploads = [];
+let userUploadHistory = [];
+
+function loadPendingUploads() {
+  const saved = localStorage.getItem('pendingUploads');
+  if (saved) {
+    try {
+      pendingUploads = JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to load pending uploads:', e);
+    }
+  }
+}
+
+function savePendingUploads() {
+  localStorage.setItem('pendingUploads', JSON.stringify(pendingUploads));
+}
+
+function loadUserUploadHistory() {
+  const saved = localStorage.getItem('userUploadHistory');
+  if (saved) {
+    try {
+      userUploadHistory = JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to load upload history:', e);
+    }
+  }
+}
+
+function saveUserUploadHistory() {
+  localStorage.setItem('userUploadHistory', JSON.stringify(userUploadHistory));
+}
+
+loadPendingUploads();
+loadUserUploadHistory();
+
 let isAdmin = false;
 let isUserLoggedIn = false;
 let currentUserName = '';
@@ -128,6 +165,17 @@ const materialUploadModal = document.getElementById('materialUploadModal');
 const closeMaterialUpload = document.getElementById('closeMaterialUpload');
 const materialForm = document.getElementById('materialForm');
 const materialTabBtns = document.querySelectorAll('.material-tab-btn');
+
+// New elements for approval system
+const pendingUploadsBtn = document.getElementById('pendingUploadsBtn');
+const pendingBadge = document.getElementById('pendingBadge');
+const pendingUploadsModal = document.getElementById('pendingUploadsModal');
+const closePendingUploads = document.getElementById('closePendingUploads');
+const pendingUploadsList = document.getElementById('pendingUploadsList');
+const uploadHistoryBtn = document.getElementById('uploadHistoryBtn');
+const uploadHistoryModal = document.getElementById('uploadHistoryModal');
+const closeUploadHistory = document.getElementById('closeUploadHistory');
+const uploadHistoryList = document.getElementById('uploadHistoryList');
 
 // Dropdown menu toggle
 authDropdownBtn.addEventListener('click', () => {
@@ -245,17 +293,24 @@ function updateUI() {
     logoutBtn.classList.remove('hidden');
     adminUsername.classList.remove('hidden');
     adminUsername.textContent = 'Admin';
+    pendingUploadsBtn.classList.remove('hidden');
+    uploadHistoryBtn.classList.add('hidden');
+    updatePendingBadge();
   } else if (isUserLoggedIn) {
     authDropdownBtn.classList.add('hidden');
     uploadMenuContainer.classList.remove('hidden');
     logoutBtn.classList.remove('hidden');
     adminUsername.classList.remove('hidden');
     adminUsername.textContent = currentUserName;
+    pendingUploadsBtn.classList.add('hidden');
+    uploadHistoryBtn.classList.remove('hidden');
   } else {
     authDropdownBtn.classList.remove('hidden');
     uploadMenuContainer.classList.add('hidden');
     logoutBtn.classList.add('hidden');
     adminUsername.classList.add('hidden');
+    pendingUploadsBtn.classList.add('hidden');
+    uploadHistoryBtn.classList.add('hidden');
   }
 }
 
@@ -303,21 +358,35 @@ function handleFileUploads(files) {
 }
 
 function saveUploadedFiles(files) {
-  // Store uploaded files in localStorage
-  let uploadedMaterials = [];
-  const existing = localStorage.getItem('uploadedMaterials');
-  if (existing) {
-    try {
-      uploadedMaterials = JSON.parse(existing);
-    } catch (e) {
-      uploadedMaterials = [];
-    }
-  }
-  
-  uploadedMaterials = uploadedMaterials.concat(files);
-  localStorage.setItem('uploadedMaterials', JSON.stringify(uploadedMaterials));
-  
-  alert(`${files.length} file(s) uploaded successfully!`);
+  // Create pending upload for file uploads
+  const uploadId = generateUploadId();
+  const uploadData = {
+    id: uploadId,
+    uploadedBy: currentUserName,
+    uploadType: 'File Upload',
+    uploadDate: new Date().toLocaleDateString(),
+    status: 'pending',
+    description: 'File upload',
+    files: files
+  };
+
+  // Save to pending uploads
+  pendingUploads.push(uploadData);
+  savePendingUploads();
+
+  // Add to user history
+  userUploadHistory.push({
+    uploadId: uploadId,
+    uploadedBy: currentUserName,
+    uploadType: 'File Upload',
+    uploadDate: new Date().toLocaleDateString(),
+    status: 'pending',
+    reviewDate: null
+  });
+  saveUserUploadHistory();
+
+  alert(`${files.length} file(s) submitted for admin approval!`);
+  updatePendingBadge();
 }
 
 closeBtn.addEventListener('click', () => {
@@ -402,37 +471,79 @@ materialForm.addEventListener('submit', (e) => {
 
 function saveMaterials() {
   if (!currentPostId) return;
-  
+
   const post = posts.find(p => p.id === currentPostId);
   if (!post) return;
 
   const text = document.querySelector(`#${currentMaterialTab}-form .material-text`).value;
-  const fileInput = document.querySelector(`#${currentMaterialTab}-form .material-file`) || 
+  const fileInput = document.querySelector(`#${currentMaterialTab}-form .material-file`) ||
                     document.querySelector(`#${currentMaterialTab}-form .material-image`);
-  
-  post.materials[currentMaterialTab].text = text;
-  
+
+  // Create pending upload
+  const uploadId = generateUploadId();
+  const uploadData = {
+    id: uploadId,
+    uploadedBy: currentUserName,
+    uploadType: 'Learning Material',
+    uploadDate: new Date().toLocaleDateString(),
+    status: 'pending',
+    postId: currentPostId,
+    materialTab: currentMaterialTab,
+    description: text,
+    files: []
+  };
+
+  // If there's a file, add it to pending
   if (fileInput && fileInput.files.length > 0) {
     const file = fileInput.files[0];
     const reader = new FileReader();
     reader.onload = (e) => {
-      post.materials[currentMaterialTab].file = {
+      uploadData.files.push({
         name: file.name,
-        data: e.target.result
-      };
-      // Save to localStorage after file is read
-      savePostsToStorage();
-      alert('Materials saved successfully!');
+        data: e.target.result,
+        type: file.type
+      });
+
+      // Save to pending uploads
+      pendingUploads.push(uploadData);
+      savePendingUploads();
+
+      // Add to user history
+      userUploadHistory.push({
+        uploadId: uploadId,
+        uploadedBy: currentUserName,
+        uploadType: 'Learning Material',
+        uploadDate: new Date().toLocaleDateString(),
+        status: 'pending',
+        reviewDate: null
+      });
+      saveUserUploadHistory();
+
+      alert('Materials submitted for admin approval!');
       materialUploadModal.classList.add('hidden');
       materialForm.reset();
+      updatePendingBadge();
     };
     reader.readAsDataURL(file);
   } else {
-    // No file, just save text
-    savePostsToStorage();
-    alert('Materials saved successfully!');
+    // No file, just text
+    pendingUploads.push(uploadData);
+    savePendingUploads();
+
+    userUploadHistory.push({
+      uploadId: uploadId,
+      uploadedBy: currentUserName,
+      uploadType: 'Learning Material',
+      uploadDate: new Date().toLocaleDateString(),
+      status: 'pending',
+      reviewDate: null
+    });
+    saveUserUploadHistory();
+
+    alert('Materials submitted for admin approval!');
     materialUploadModal.classList.add('hidden');
     materialForm.reset();
+    updatePendingBadge();
   }
 }
 
@@ -728,6 +839,177 @@ function updateAdminPostsList() {
     adminPostsList.appendChild(item);
   });
 }
+
+// Approval system functions
+function generateUploadId() {
+  return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+}
+
+function updatePendingBadge() {
+  if (pendingUploads.length > 0) {
+    pendingBadge.textContent = pendingUploads.length;
+    pendingBadge.style.display = 'inline-block';
+  } else {
+    pendingBadge.style.display = 'none';
+  }
+}
+
+function displayPendingUploads() {
+  pendingUploadsList.innerHTML = '';
+
+  if (pendingUploads.length === 0) {
+    pendingUploadsList.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No pending uploads</p>';
+    return;
+  }
+
+  pendingUploads.forEach(upload => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 1rem; background: #f8fafc;';
+
+    let filesList = '';
+    if (upload.files && upload.files.length > 0) {
+      filesList = upload.files.map(f => `<li>${f.name}</li>`).join('');
+    }
+
+    item.innerHTML = `
+      <div style="margin-bottom: 1rem;">
+        <h4 style="margin: 0 0 0.5rem 0; color: #1e293b;">Uploaded by: ${upload.uploadedBy}</h4>
+        <p style="margin: 0.5rem 0; color: #64748b; font-size: 0.9rem;">Date: ${upload.uploadDate}</p>
+        <p style="margin: 0.5rem 0; color: #64748b; font-size: 0.9rem;"><strong>Type:</strong> ${upload.uploadType}</p>
+        ${filesList ? `<p style="margin: 0.5rem 0; color: #64748b; font-size: 0.9rem;"><strong>Files:</strong><ul style="margin: 0.5rem 0; padding-left: 1.5rem;">${filesList}</ul></p>` : ''}
+        <p style="margin: 0.5rem 0; color: #475569;">${upload.description || 'No description'}</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="approve-upload-btn" data-id="${upload.id}" style="flex: 1; padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Approve</button>
+        <button class="reject-upload-btn" data-id="${upload.id}" style="flex: 1; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">Reject</button>
+      </div>
+    `;
+
+    pendingUploadsList.appendChild(item);
+  });
+
+  // Add event listeners to approve/reject buttons
+  document.querySelectorAll('.approve-upload-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      approveUpload(btn.dataset.id);
+    });
+  });
+
+  document.querySelectorAll('.reject-upload-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      rejectUpload(btn.dataset.id);
+    });
+  });
+}
+
+function approveUpload(uploadId) {
+  const upload = pendingUploads.find(u => u.id === uploadId);
+  if (!upload) return;
+
+  // Move upload to approved
+  const approvedUpload = {
+    ...upload,
+    status: 'approved',
+    approvedBy: 'Admin',
+    reviewDate: new Date().toLocaleDateString()
+  };
+
+  // Update user history
+  const userHistory = userUploadHistory.find(h => h.uploadId === uploadId);
+  if (userHistory) {
+    userHistory.status = 'approved';
+    userHistory.reviewDate = new Date().toLocaleDateString();
+  }
+
+  // Remove from pending
+  pendingUploads = pendingUploads.filter(u => u.id !== uploadId);
+  savePendingUploads();
+  saveUserUploadHistory();
+
+  alert('Upload approved successfully!');
+  displayPendingUploads();
+  updatePendingBadge();
+}
+
+function rejectUpload(uploadId) {
+  const upload = pendingUploads.find(u => u.id === uploadId);
+  if (!upload) return;
+
+  // Update user history
+  const userHistory = userUploadHistory.find(h => h.uploadId === uploadId);
+  if (userHistory) {
+    userHistory.status = 'rejected';
+    userHistory.reviewDate = new Date().toLocaleDateString();
+  }
+
+  // Remove from pending
+  pendingUploads = pendingUploads.filter(u => u.id !== uploadId);
+  savePendingUploads();
+  saveUserUploadHistory();
+
+  alert('Upload rejected!');
+  displayPendingUploads();
+  updatePendingBadge();
+}
+
+function displayUserUploadHistory() {
+  uploadHistoryList.innerHTML = '';
+
+  const userHistory = userUploadHistory.filter(h => h.uploadedBy === currentUserName);
+
+  if (userHistory.length === 0) {
+    uploadHistoryList.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No uploads yet</p>';
+    return;
+  }
+
+  userHistory.forEach(upload => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 1rem; background: #f8fafc;';
+
+    let statusColor = '#64748b';
+    let statusText = upload.status;
+    if (upload.status === 'approved') {
+      statusColor = '#10b981';
+      statusText = '✓ Approved';
+    } else if (upload.status === 'rejected') {
+      statusColor = '#ef4444';
+      statusText = '✗ Rejected';
+    } else if (upload.status === 'pending') {
+      statusColor = '#f59e0b';
+      statusText = '⏳ Pending';
+    }
+
+    item.innerHTML = `
+      <div style="margin-bottom: 1rem;">
+        <h4 style="margin: 0 0 0.5rem 0; color: #1e293b;">Upload Type: ${upload.uploadType}</h4>
+        <p style="margin: 0.5rem 0; color: #64748b; font-size: 0.9rem;">Date Uploaded: ${upload.uploadDate}</p>
+        <p style="margin: 0.5rem 0; color: #64748b; font-size: 0.9rem;">Status: <span style="color: ${statusColor}; font-weight: bold;">${statusText}</span></p>
+        ${upload.reviewDate ? `<p style="margin: 0.5rem 0; color: #64748b; font-size: 0.9rem;">Reviewed: ${upload.reviewDate}</p>` : ''}
+      </div>
+    `;
+
+    uploadHistoryList.appendChild(item);
+  });
+}
+
+// Event listeners for new buttons
+pendingUploadsBtn.addEventListener('click', () => {
+  displayPendingUploads();
+  pendingUploadsModal.classList.remove('hidden');
+});
+
+closePendingUploads.addEventListener('click', () => {
+  pendingUploadsModal.classList.add('hidden');
+});
+
+uploadHistoryBtn.addEventListener('click', () => {
+  displayUserUploadHistory();
+  uploadHistoryModal.classList.remove('hidden');
+});
+
+closeUploadHistory.addEventListener('click', () => {
+  uploadHistoryModal.classList.add('hidden');
+});
 
 renderPosts();
 
