@@ -30,6 +30,38 @@ let posts = [
       lessons: { text: 'Lesson content...', file: null },
       support: { text: 'Support resources...', file: null }
     }
+  },
+  {
+    id: 3,
+    section: 'roblox',
+    title: 'Introduction to Roblox Studio',
+    intro: 'Get started with Roblox Studio and create your first game world.',
+    image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=800',
+    date: '2024-05-14',
+    dateLearned: 'May 14, 2024',
+    staffDate: 'May 16, 2024',
+    materials: {
+      overview: { text: 'Roblox Studio overview...', image: null },
+      coding: { text: 'Lua scripting basics...', file: null },
+      lessons: { text: 'Tutorial lessons...', file: null },
+      support: { text: 'Help and resources...', file: null }
+    }
+  },
+  {
+    id: 4,
+    section: 'multimedia',
+    title: 'Digital Media Design Basics',
+    intro: 'Learn the fundamentals of digital design, video editing, and multimedia creation.',
+    image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800',
+    date: '2024-05-15',
+    dateLearned: 'May 15, 2024',
+    staffDate: 'May 16, 2024',
+    materials: {
+      overview: { text: 'Multimedia fundamentals...', image: null },
+      coding: { text: 'Code examples...', file: null },
+      lessons: { text: 'Design lessons...', file: null },
+      support: { text: 'Design resources...', file: null }
+    }
   }
 ];
 
@@ -53,20 +85,33 @@ function savePostsToStorage() {
 loadPostsFromStorage();
 
 let isAdmin = false;
-let currentSection = 'cyber';
+let isUserLoggedIn = false;
+let currentUserName = '';
+let currentSection = 'home';
 let currentPostId = null;
 let currentMaterialTab = 'overview';
 
 const adminBtn = document.getElementById('adminBtn');
+const userLoginBtn = document.getElementById('userLoginBtn');
+const signupBtn = document.getElementById('signupBtn');
+const authDropdownBtn = document.getElementById('authDropdownBtn');
+const authDropdownMenu = document.getElementById('authDropdownMenu');
 const uploadBtn = document.getElementById('uploadBtn');
 const uploadMenuContainer = document.getElementById('uploadMenuContainer');
-const submenuItems = document.querySelectorAll('.submenu-item');
 const logoutBtn = document.getElementById('logoutBtn');
 const adminUsername = document.getElementById('adminUsername');
 const loginModal = document.getElementById('loginModal');
 const closeLogin = document.getElementById('closeLogin');
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
+const userLoginModal = document.getElementById('userLoginModal');
+const closeUserLogin = document.getElementById('closeUserLogin');
+const userLoginForm = document.getElementById('userLoginForm');
+const userLoginError = document.getElementById('userLoginError');
+const signupModal = document.getElementById('signupModal');
+const closeSignup = document.getElementById('closeSignup');
+const signupForm = document.getElementById('signupForm');
+const signupError = document.getElementById('signupError');
 
 const adminPanel = document.getElementById('adminPanel');
 const closeBtn = document.getElementById('closeAdmin');
@@ -75,13 +120,33 @@ const postsFeed = document.getElementById('postsFeed');
 const buttonsFeed = document.getElementById('buttonsFeed');
 const detailPage = document.getElementById('detailPage');
 const backBtn = document.getElementById('backBtn');
-const navButtons = document.querySelectorAll('.nav-btn:not(.admin-toggle)');
+const navButtons = document.querySelectorAll('.nav-btn[data-section]');
 const tabButtons = document.querySelectorAll('.tab-btn');
 
 const materialUploadModal = document.getElementById('materialUploadModal');
 const closeMaterialUpload = document.getElementById('closeMaterialUpload');
 const materialForm = document.getElementById('materialForm');
 const materialTabBtns = document.querySelectorAll('.material-tab-btn');
+
+// Dropdown menu toggle
+authDropdownBtn.addEventListener('click', () => {
+  authDropdownMenu.classList.toggle('visible');
+});
+
+// Close dropdown when clicking on a dropdown item
+const dropdownItems = document.querySelectorAll('.dropdown-item');
+dropdownItems.forEach(item => {
+  item.addEventListener('click', () => {
+    authDropdownMenu.classList.remove('visible');
+  });
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!authDropdownBtn.contains(e.target) && !authDropdownMenu.contains(e.target)) {
+    authDropdownMenu.classList.remove('visible');
+  }
+});
 
 // Admin Login
 adminBtn.addEventListener('click', () => {
@@ -102,7 +167,7 @@ loginForm.addEventListener('submit', (e) => {
   if (username === 'Admin' && password === '121217') {
     isAdmin = true;
     loginModal.classList.add('hidden');
-    updateAdminUI();
+    updateUI();
     updateAdminPostsList();
     alert('Login successful!');
   } else {
@@ -110,47 +175,149 @@ loginForm.addEventListener('submit', (e) => {
   }
 });
 
+// User Login
+userLoginBtn.addEventListener('click', () => {
+  userLoginModal.classList.remove('hidden');
+  userLoginError.textContent = '';
+});
+
+closeUserLogin.addEventListener('click', () => {
+  userLoginModal.classList.add('hidden');
+  userLoginError.textContent = '';
+});
+
+userLoginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const username = document.getElementById('userLoginUsername').value;
+  const password = document.getElementById('userLoginPassword').value;
+
+  if (username && password) {
+    isUserLoggedIn = true;
+    currentUserName = username;
+    userLoginModal.classList.add('hidden');
+    updateUI();
+    alert('User login successful!');
+  } else {
+    userLoginError.textContent = 'Please enter username and password';
+  }
+});
+
+// Sign Up
+signupBtn.addEventListener('click', () => {
+  signupModal.classList.remove('hidden');
+  signupError.textContent = '';
+});
+
+closeSignup.addEventListener('click', () => {
+  signupModal.classList.add('hidden');
+  signupError.textContent = '';
+});
+
+signupForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const username = document.getElementById('signupUsername').value;
+  const password = document.getElementById('signupPassword').value;
+
+  if (username && password) {
+    isUserLoggedIn = true;
+    currentUserName = username;
+    signupModal.classList.add('hidden');
+    updateUI();
+    alert('Sign up successful! Welcome to CS Learn Portal!');
+  } else {
+    signupError.textContent = 'Please enter username and password';
+  }
+});
+
 // Logout
 logoutBtn.addEventListener('click', () => {
   isAdmin = false;
-  updateAdminUI();
+  isUserLoggedIn = false;
+  currentUserName = '';
+  updateUI();
 });
 
-function updateAdminUI() {
+function updateUI() {
   if (isAdmin) {
-    adminBtn.classList.add('hidden');
+    authDropdownBtn.classList.add('hidden');
     uploadMenuContainer.classList.remove('hidden');
     logoutBtn.classList.remove('hidden');
     adminUsername.classList.remove('hidden');
     adminUsername.textContent = 'Admin';
+  } else if (isUserLoggedIn) {
+    authDropdownBtn.classList.add('hidden');
+    uploadMenuContainer.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden');
+    adminUsername.classList.remove('hidden');
+    adminUsername.textContent = currentUserName;
   } else {
-    adminBtn.classList.remove('hidden');
+    authDropdownBtn.classList.remove('hidden');
     uploadMenuContainer.classList.add('hidden');
     logoutBtn.classList.add('hidden');
     adminUsername.classList.add('hidden');
   }
 }
 
-// Admin Panel for creating posts
+// File upload for materials - show upload modal
+const hiddenFileInput = document.getElementById('hiddenFileInput');
 uploadBtn.addEventListener('click', () => {
-  if (isAdmin) {
-    adminPanel.classList.remove('hidden');
+  if (isAdmin || isUserLoggedIn) {
+    materialUploadModal.classList.remove('hidden');
   }
 });
 
-// Submenu items for uploading materials
-submenuItems.forEach(item => {
-  item.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (isAdmin && currentPostId) {
-      currentMaterialTab = item.dataset.material;
-      materialUploadModal.classList.remove('hidden');
-      updateMaterialTabs();
-    } else {
-      alert('Please select a post first before uploading materials.');
+// Handle file selection
+if (hiddenFileInput) {
+  hiddenFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFileUploads(e.target.files);
     }
+    // Reset the input
+    hiddenFileInput.value = '';
   });
-});
+}
+
+function handleFileUploads(files) {
+  const uploadedFiles = [];
+  let filesProcessed = 0;
+  
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      uploadedFiles.push({
+        name: file.name,
+        data: event.target.result,
+        type: file.type,
+        uploadDate: new Date().toLocaleDateString()
+      });
+      filesProcessed++;
+      
+      // When all files are processed
+      if (filesProcessed === files.length) {
+        saveUploadedFiles(uploadedFiles);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveUploadedFiles(files) {
+  // Store uploaded files in localStorage
+  let uploadedMaterials = [];
+  const existing = localStorage.getItem('uploadedMaterials');
+  if (existing) {
+    try {
+      uploadedMaterials = JSON.parse(existing);
+    } catch (e) {
+      uploadedMaterials = [];
+    }
+  }
+  
+  uploadedMaterials = uploadedMaterials.concat(files);
+  localStorage.setItem('uploadedMaterials', JSON.stringify(uploadedMaterials));
+  
+  alert(`${files.length} file(s) uploaded successfully!`);
+}
 
 closeBtn.addEventListener('click', () => {
   adminPanel.classList.add('hidden');
@@ -304,17 +471,94 @@ function createNewPost() {
 }
 
 function renderPosts() {
-  const filteredPosts = posts.filter(post => post.section === currentSection).slice(0, 3);
-  
-  if (currentSection === 'cyber') {
+  if (currentSection === 'home') {
     postsFeed.classList.remove('hidden');
     buttonsFeed.classList.add('hidden');
-    renderBigPosts(filteredPosts);
+    renderHomePage();
   } else {
+    const filteredPosts = posts.filter(post => post.section === currentSection).slice(0, 3);
     postsFeed.classList.add('hidden');
     buttonsFeed.classList.remove('hidden');
-    renderButtonPosts(filteredPosts);
+    
+    let customBg = null;
+    if (currentSection === 'cyber') {
+      customBg = 'CyberSecurity.jpg';
+    } else if (currentSection === 'roblox') {
+      customBg = 'RobloxStudio.png';
+    }
+    
+    renderButtonPosts(filteredPosts, customBg);
   }
+}
+
+function renderHomePage() {
+  postsFeed.innerHTML = '';
+  
+  const sections = ['cyber', 'robotics', 'roblox', 'multimedia'];
+  const sectionLabels = {
+    cyber: 'Cyber Security',
+    robotics: 'Robotics/Hardware',
+    roblox: 'Roblox Studio',
+    multimedia: 'Multi-Media'
+  };
+  
+  const sectionBgImages = {
+    cyber: 'CyberSecurity.jpg',
+    roblox: 'RobloxStudio.png'
+  };
+  
+  sections.forEach(section => {
+    const sectionPosts = posts.filter(post => post.section === section);
+    
+    if (sectionPosts.length > 0) {
+      const sectionContainer = document.createElement('div');
+      sectionContainer.style.cssText = 'margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 2px solid #e2e8f0;';
+      
+      const sectionTitle = document.createElement('h2');
+      sectionTitle.textContent = sectionLabels[section];
+      sectionTitle.style.cssText = 'margin-bottom: 1.5rem; font-size: 1.8rem; color: #1e293b; font-weight: bold;';
+      
+      sectionContainer.appendChild(sectionTitle);
+      
+      const postsContainer = document.createElement('div');
+      postsContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;';
+      
+      sectionPosts.slice(0, 3).forEach(post => {
+        const postCard = document.createElement('div');
+        postCard.className = 'post-card';
+        const bgImage = sectionBgImages[section] || post.image;
+        postCard.innerHTML = `
+          <div class="post-image-container">
+            <img src="${bgImage}" alt="${post.title}" class="post-image">
+          </div>
+          <div class="post-body">
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-intro">${post.intro}</p>
+          </div>
+          <div class="post-extended">
+            <div class="post-date-left">
+              <strong>Learned:</strong>
+              <span>${post.dateLearned}</span>
+            </div>
+            <div class="post-date-right">
+              <strong>Recorded:</strong>
+              <span>${post.staffDate}</span>
+            </div>
+          </div>
+        `;
+        
+        postCard.addEventListener('click', () => {
+          currentPostId = post.id;
+          showDetailPage(post);
+        });
+        
+        postsContainer.appendChild(postCard);
+      });
+      
+      sectionContainer.appendChild(postsContainer);
+      postsFeed.appendChild(sectionContainer);
+    }
+  });
 }
 
 function renderBigPosts(filteredPosts) {
@@ -358,7 +602,7 @@ function renderBigPosts(filteredPosts) {
   });
 }
 
-function renderButtonPosts(filteredPosts) {
+function renderButtonPosts(filteredPosts, customBg = null) {
   buttonsFeed.innerHTML = '';
 
   if (filteredPosts.length === 0) {
@@ -376,8 +620,9 @@ function renderButtonPosts(filteredPosts) {
     const post = filteredPosts[0];
     const button = document.createElement('button');
     button.className = 'content-button';
+    const bgImage = customBg || post.image;
     button.innerHTML = `
-      <div class="content-button-bg" style="background-image: url('${post.image}');"></div>
+      <div class="content-button-bg" style="background-image: url('${bgImage}');"></div>
       <div class="content-button-label">${btnType.label}</div>
     `;
 
