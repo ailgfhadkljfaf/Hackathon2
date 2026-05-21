@@ -92,6 +92,7 @@ let currentPostId = null;
 let currentMaterialTab = 'overview';
 
 const adminBtn = document.getElementById('adminBtn');
+const logoBtn = document.getElementById('logoBtn');
 const userLoginBtn = document.getElementById('userLoginBtn');
 const signupBtn = document.getElementById('signupBtn');
 const authDropdownBtn = document.getElementById('authDropdownBtn');
@@ -331,6 +332,17 @@ postForm.addEventListener('submit', (e) => {
 // File upload preview
 document.getElementById('postImage').addEventListener('change', (e) => {
   // Handle file upload for posts
+});
+
+// Logo button - navigate to home
+logoBtn.addEventListener('click', () => {
+  navButtons.forEach(b => b.classList.remove('active'));
+  const homeBtn = document.querySelector('.nav-btn[data-section="home"]');
+  if (homeBtn) {
+    homeBtn.classList.add('active');
+  }
+  currentSection = 'home';
+  renderPosts();
 });
 
 // Navigation buttons
