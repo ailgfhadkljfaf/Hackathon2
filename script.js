@@ -944,13 +944,23 @@ function approveUpload(uploadId) {
   const upload = pendingUploads.find(u => u.id === uploadId);
   if (!upload) return;
 
-  // Move upload to approved
-  const approvedUpload = {
-    ...upload,
-    status: 'approved',
-    approvedBy: 'Admin',
-    reviewDate: new Date().toLocaleDateString()
-  };
+  // Find the post this upload is for
+  const post = posts.find(p => p.id === upload.postId);
+  if (post && upload.materialTab) {
+    // Update the post's materials with the approved upload
+    post.materials[upload.materialTab].text = upload.description;
+
+    // If there are files, add the first one
+    if (upload.files && upload.files.length > 0) {
+      post.materials[upload.materialTab].file = {
+        name: upload.files[0].name,
+        data: upload.files[0].data
+      };
+    }
+
+    // Save the updated post
+    savePostsToStorage();
+  }
 
   // Update user history
   const userHistory = userUploadHistory.find(h => h.uploadId === uploadId);
@@ -964,7 +974,7 @@ function approveUpload(uploadId) {
   savePendingUploads();
   saveUserUploadHistory();
 
-  alert('Upload approved successfully!');
+  alert('Upload approved successfully! Material is now live.');
   displayPendingUploads();
   updatePendingBadge();
 }
