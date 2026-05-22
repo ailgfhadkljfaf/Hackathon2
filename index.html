@@ -35,7 +35,7 @@
         <button class="nav-btn dropdown-toggle" id="authDropdownBtn">Sign Up/Login</button>
         <div class="dropdown-menu" id="authDropdownMenu">
           <button class="dropdown-item" id="userLoginBtn">User Login</button>
-          <button class="dropdown-item" id="signupBtn">Sign Up</button>
+          <button class="dropdown-item" id="signupBtn">User Sign Up</button>
           <button class="dropdown-item" id="adminBtn">Admin Login</button>
         </div>
       </div>
@@ -216,6 +216,13 @@
       </div>
 
       <form id="materialForm" class="material-form">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label><strong>Select Post/Section:</strong></label>
+          <select id="materialPostSelect" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 1rem;">
+            <option value="">-- Choose a Post --</option>
+          </select>
+        </div>
+
         <div class="material-form-content">
           <div id="overview-form" class="material-section active">
             <h3>Overview</h3>

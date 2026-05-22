@@ -176,6 +176,7 @@ const uploadHistoryBtn = document.getElementById('uploadHistoryBtn');
 const uploadHistoryModal = document.getElementById('uploadHistoryModal');
 const closeUploadHistory = document.getElementById('closeUploadHistory');
 const uploadHistoryList = document.getElementById('uploadHistoryList');
+const materialPostSelect = document.getElementById('materialPostSelect');
 
 // Dropdown menu toggle
 authDropdownBtn.addEventListener('click', () => {
@@ -318,6 +319,7 @@ function updateUI() {
 const hiddenFileInput = document.getElementById('hiddenFileInput');
 uploadBtn.addEventListener('click', () => {
   if (isAdmin || isUserLoggedIn) {
+    populatePostSelect();
     materialUploadModal.classList.remove('hidden');
   }
 });
@@ -444,7 +446,7 @@ tabButtons.forEach(btn => {
 });
 
 closeMaterialUpload.addEventListener('click', () => {
-  materialUploadModal.classList.add('hidden');
+  closeMaterialModal();
 });
 
 materialTabBtns.forEach(btn => {
@@ -470,14 +472,29 @@ materialForm.addEventListener('submit', (e) => {
 });
 
 function saveMaterials() {
-  if (!currentPostId) return;
+  // Get selected post ID from dropdown
+  const selectedPostId = parseInt(materialPostSelect.value);
 
-  const post = posts.find(p => p.id === currentPostId);
-  if (!post) return;
+  if (!selectedPostId) {
+    alert('Error: Please select a post from the dropdown.');
+    return;
+  }
+
+  const post = posts.find(p => p.id === selectedPostId);
+  if (!post) {
+    alert('Error: Post not found. Please try again.');
+    return;
+  }
 
   const text = document.querySelector(`#${currentMaterialTab}-form .material-text`).value;
   const fileInput = document.querySelector(`#${currentMaterialTab}-form .material-file`) ||
                     document.querySelector(`#${currentMaterialTab}-form .material-image`);
+
+  // Check if at least some content is provided
+  if (!text && (!fileInput || fileInput.files.length === 0)) {
+    alert('Please enter text or upload a file');
+    return;
+  }
 
   // Create pending upload
   const uploadId = generateUploadId();
@@ -487,7 +504,8 @@ function saveMaterials() {
     uploadType: 'Learning Material',
     uploadDate: new Date().toLocaleDateString(),
     status: 'pending',
-    postId: currentPostId,
+    postId: selectedPostId,
+    postTitle: post.title,
     materialTab: currentMaterialTab,
     description: text,
     files: []
@@ -520,8 +538,7 @@ function saveMaterials() {
       saveUserUploadHistory();
 
       alert('Materials submitted for admin approval!');
-      materialUploadModal.classList.add('hidden');
-      materialForm.reset();
+      closeMaterialModal();
       updatePendingBadge();
     };
     reader.readAsDataURL(file);
@@ -541,10 +558,18 @@ function saveMaterials() {
     saveUserUploadHistory();
 
     alert('Materials submitted for admin approval!');
-    materialUploadModal.classList.add('hidden');
-    materialForm.reset();
+    closeMaterialModal();
     updatePendingBadge();
   }
+}
+
+function closeMaterialModal() {
+  materialUploadModal.classList.add('hidden');
+  materialForm.reset();
+  materialPostSelect.value = '';
+  // Reset material tabs
+  currentMaterialTab = 'overview';
+  updateMaterialTabs();
 }
 
 function createNewPost() {
@@ -843,6 +868,19 @@ function updateAdminPostsList() {
 // Approval system functions
 function generateUploadId() {
   return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+}
+
+function populatePostSelect() {
+  // Clear existing options except the default
+  materialPostSelect.innerHTML = '<option value="">-- Choose a Post --</option>';
+
+  // Add all posts to the dropdown
+  posts.forEach(post => {
+    const option = document.createElement('option');
+    option.value = post.id;
+    option.textContent = `${post.title} (${post.section})`;
+    materialPostSelect.appendChild(option);
+  });
 }
 
 function updatePendingBadge() {
